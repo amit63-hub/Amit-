@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.userId == request.auth.uid 
+        && data.email is string 
+        && data.email.size() < 256;
+    }
+
+    function isValidMessage(data) {
+      return data.userId == request.auth.uid
+        && data.role in ['user', 'assistant']
+        && data.content is string
+        && data.content.size() < 10000;
+    }
+
+    function isValidLead(data) {
+      return data.userId == request.auth.uid
+        && data.name is string && data.name.size() < 128
+        && data.contact is string && data.contact.size() < 128
+        && data.intent is string && data.intent.size() < 1000;
+    }
+
+    function isValidFollowup(data) {
+      return data.userId == request.auth.uid
+        && data.contact is string && data.contact.size() < 128
+        && data.status == 'pending';
+    }
+
+    function isValidCall(data) {
+      return data.userId == request.auth.uid
+        && data.phone is string && data.phone.size() < 32
+        && data.status == 'initiated';
+    }
+
+    function isValidSummary(data) {
+       return data.summary is string && data.summary.size() < 5000;
+     }
+ 
+    function isValidTask(data) {
+      return data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() < 256
+        && data.completed is bool
+        && data.priority in ['low', 'medium', 'high']
+        && (!('dueDate' in data) || data.dueDate == null || data.dueDate is timestamp);
+    }
+
+    function isValidVideoSync(data) {
+      return data.url is string && data.url.size() < 2048
+        && data.isPlaying is bool
+        && data.currentTime is number
+        && data.lastUpdated is number
+        && data.senderId == request.auth.uid;
+    }
+
+     match /users/{userId} {
+       allow get: if isOwner(userId);
+       allow create: if isOwner(userId) && isValidUser(request.resource.data);
+       allow update: if isOwner(userId) && isValidUser(request.resource.data) 
+         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'updatedAt']);
+       
+       match /messages/{messageId} {
+         allow list: if isOwner(userId);
+         allow create: if isOwner(userId) && isValidMessage(request.resource.data);
+         allow delete: if isOwner(userId);
+       }
+ 
+       match /summaries/{summaryId} {
+         allow list: if isOwner(userId);
+         allow create: if isOwner(userId) && isValidSummary(request.resource.data);
+       }
+
+      match /tasks/{taskId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidTask(request.resource.data);
+        allow update: if isOwner(userId) && isValidTask(request.resource.data);
+        allow delete: if isOwner(userId);
+      }
+     }
+
+    match /leads/{leadId} {
+      allow create: if isSignedIn() && isValidLead(request.resource.data);
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /followups/{followupId} {
+      allow create: if isSignedIn() && isValidFollowup(request.resource.data);
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /calls/{callId} {
+      allow create: if isSignedIn() && isValidCall(request.resource.data);
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /rooms/{roomId}/videoSync/{syncId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidVideoSync(request.resource.data)
+        && request.resource.data.keys().hasAll(['url', 'isPlaying', 'currentTime', 'lastUpdated', 'senderId'])
+        && request.resource.data.keys().size() == 5;
+      allow update: if isSignedIn() && isValidVideoSync(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny(['url', 'isPlaying', 'currentTime', 'lastUpdated', 'senderId']);
+    }
+  }
+}

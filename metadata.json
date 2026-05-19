@@ -1,0 +1,11 @@
+{
+  "name": "REWON AI",
+  "description": "The World's Most Advanced Enterprise AI Assistant for sales, support, and engagement with real-time video calls and sleek visuals.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

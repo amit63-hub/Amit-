@@ -1,0 +1,140 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile data including preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "A single chat message in a conversation.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "role", "content", "timestamp"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "Captured lead information.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "intent": { "type": "string" },
+        "source": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "contact", "intent", "timestamp"]
+    },
+    "Followup": {
+      "title": "Followup",
+      "description": "Scheduled follow-up details.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "contact": { "type": "string" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "contact", "status", "timestamp"]
+    },
+    "Summary": {
+      "title": "Conversation Summary",
+      "description": "AI-generated summary of a conversation.",
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["summary", "timestamp"]
+    },
+    "Call": {
+       "title": "Call",
+       "description": "Details of an initiated outbound call.",
+       "type": "object",
+       "properties": {
+         "userId": { "type": "string" },
+         "phone": { "type": "string" },
+         "status": { "type": "string" },
+         "timestamp": { "type": "string", "format": "date-time" }
+       },
+       "required": ["userId", "phone", "status", "timestamp"]
+     },
+     "Task": {
+       "title": "Task",
+       "description": "A user-defined task to be managed.",
+       "type": "object",
+       "properties": {
+         "userId": { "type": "string" },
+         "title": { "type": "string" },
+         "description": { "type": "string" },
+         "completed": { "type": "boolean" },
+         "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+         "dueDate": { "type": "string", "format": "date-time" },
+         "createdAt": { "type": "string", "format": "date-time" },
+         "updatedAt": { "type": "string", "format": "date-time" }
+       },
+       "required": ["userId", "title", "completed", "createdAt"]
+     },
+     "VideoSync": {
+       "title": "Video Synchronization",
+       "description": "State for synchronized video playback in a room.",
+       "type": "object",
+       "properties": {
+         "url": { "type": "string" },
+         "isPlaying": { "type": "boolean" },
+         "currentTime": { "type": "number" },
+         "lastUpdated": { "type": "number" },
+         "senderId": { "type": "string" }
+       },
+       "required": ["url", "isPlaying", "currentTime", "lastUpdated", "senderId"]
+     }
+   },
+   "firestore": {
+     "/users/{userId}": {
+       "schema": "User",
+       "description": "User profiles"
+     },
+     "/users/{userId}/messages/{messageId}": {
+       "schema": "ChatMessage",
+       "description": "Chat history for each user"
+     },
+     "/users/{userId}/summaries/{summaryId}": {
+       "schema": "Summary",
+       "description": "Conversation summaries for each user"
+     },
+     "/users/{userId}/tasks/{taskId}": {
+       "schema": "Task",
+       "description": "User tasks"
+     },
+     "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "Captured leads"
+    },
+    "/followups/{followupId}": {
+      "schema": "Followup",
+      "description": "Scheduled followups"
+    },
+    "/calls/{callId}": {
+      "schema": "Call",
+      "description": "Initiated outbound calls"
+    },
+    "/rooms/{roomId}/videoSync/{syncId}": {
+      "schema": "VideoSync",
+      "description": "Room video synchronization state"
+    }
+  }
+}
